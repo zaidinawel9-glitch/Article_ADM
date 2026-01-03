@@ -1,7 +1,5 @@
----
-title: "R Notebook"
-output: github_document 
----
+R Notebook
+================
 
 Cette première commande sert à charger le package DADA2 et vérifier sa version (utile pour la reproductibilité des résultats) — ici, c’est la version 1.28.0.
 
@@ -67,11 +65,23 @@ out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(220,160),
 head(out)
 ```
 
+                       reads.in reads.out
+SRR34564433_1.fastq.gz   112166    112166
+SRR34564434_1.fastq.gz    23224     23224
+SRR34564435_1.fastq.gz    27466     27466
+SRR34564436_1.fastq.gz    82807     82807
+SRR34564437_1.fastq.gz    22389     22389
+SRR34564438_1.fastq.gz   120638    120638
+
 création d’un modèle d’erreur à partir des fichiers filtrés (forward )pour estimer la probabilité d’erreurs de séquençage selon la qualité
 
 ```{r}
 errF <- learnErrors(filtFs, multithread=TRUE)
 ```
+
+
+105274180 total bases in 478519 reads from 7 samples will be used for learning the error rates.
+
 
 création d’un modèle d’erreur à partir des fichiers filtrés (reverse )pour estimer la probabilité d’erreurs de séquençage selon la qualité
 

@@ -128,13 +128,14 @@ footer {
   display: none !important;
 }
 
-/* Layout wrapper (inchangé) */
+
 .wrapper {
   max-width: none !important;
   width: 100% !important;
   padding: 0 !important;
   margin: 0 !important;
 }
+
 
 .wrapper > header,
 .wrapper > section {
@@ -143,6 +144,7 @@ footer {
   margin: 0 !important;
   box-sizing: border-box;
 }
+
 
 .wrapper > section {
   margin-left: 0 !important;
@@ -155,8 +157,12 @@ footer {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(255,255,255,0.96);
+  background: rgba(255,255,255,0.95);
   border-bottom: 1px solid #eaecef;
   padding-left: clamp(16px, 3vw, 40px);
   padding-right: clamp(16px, 3vw, 40px);
+}
+
+html, body {
+  overflow-x: hidden;
 }
