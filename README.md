@@ -108,7 +108,7 @@ Débruite les lectures filtrées avec le modèle d’erreur pour identifier les 
 dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
 ```
 
-# Fusionner les reads forward et reverse pour reconstruire les séquences complètes
+Fusionner les reads forward et reverse pour reconstruire les séquences complètes
 
 ```{r}
 mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
@@ -116,32 +116,33 @@ mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
 head(mergers[[1]])
 ```
 
-## Cette étape construit la table ASV à partir des séquences fusionnées : chaque ligne représente un échantillon,
-# chaque colonne correspond à une séquence ASV unique, et chaque valeur indique le nombre de reads observés pour
-# cette séquence dans l’échantillon, ce qui constitue la base des analyses écologiques et taxonomiques ultérieures.
+Cette étape construit la table ASV à partir des séquences fusionnées : chaque ligne représente un échantillon,
+chaque colonne correspond à une séquence ASV unique, et chaque valeur indique le nombre de reads observés pour
+cette séquence dans l’échantillon, ce qui constitue la base des analyses écologiques et taxonomiques ultérieures.
 
 ```{r}
 seqtab <- makeSequenceTable(mergers)
 dim(seqtab)
 ```
 
-# Cette étape permet d’examiner la distribution des longueurs des séquences ASV obtenues après fusion,
-# afin de vérifier leur cohérence biologique et de détecter d’éventuelles séquences aberrantes ou mal fusionnées.
+Cette étape permet d’examiner la distribution des longueurs des séquences ASV obtenues après fusion,
+afin de vérifier leur cohérence biologique et de détecter d’éventuelles séquences aberrantes ou mal fusionnées.
 
 ```{r}
 # Inspect distribution of sequence lengths
 table(nchar(getSequences(seqtab)))
 ```
 
-## Cette commande supprime les séquences chimériques issues d’artefacts de PCR en utilisant une approche consensus,
-# ce qui permet de conserver uniquement les séquences biologiquement plausibles pour les analyses ultérieures.
+Cette commande supprime les séquences chimériques issues d’artefacts de PCR en utilisant une approche consensus,
+ce qui permet de conserver uniquement les séquences biologiquement plausibles pour les analyses ultérieures.
 
 ```{r}
 seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 dim(seqtab.nochim)
 ```
-## Cette ligne calcule la proportion de reads conservés après l’élimination des chimères,
-# fournissant un indicateur global de la qualité du jeu de données après nettoyage.
+
+Cette ligne calcule la proportion de reads conservés après l’élimination des chimères,
+ fournissant un indicateur global de la qualité du jeu de données après nettoyage.
 
 ```{r}
 sum(seqtab.nochim)/sum(seqtab)
@@ -161,34 +162,36 @@ colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "n
 rownames(track) <- sample.names
 head(track)
 ```
-# Cette étape assigne une taxonomie aux ASV non chimériques à l’aide de la base de données SILVA,
-# en classant chaque séquence jusqu’au niveau du genre lorsque l’information est disponible.
+
+Cette étape assigne une taxonomie aux ASV non chimériques à l’aide de la base de données SILVA,
+en classant chaque séquence jusqu’au niveau du genre lorsque l’information est disponible.
 
 ```{r}
 taxa <- assignTaxonomy(seqtab.nochim, "~/ARTICLE/silva_nr99_v138.2_toGenus_trainset.fa.gz?download=1", multithread=TRUE)
 ```
 
-#Cette commande tente d’affiner l’annotation taxonomique en ajoutant le niveau espèce,
-# lorsque la séquence ASV correspond suffisamment bien à une référence de la base SILVA.
+Cette commande tente d’affiner l’annotation taxonomique en ajoutant le niveau espèce,
+ lorsque la séquence ASV correspond suffisamment bien à une référence de la base SILVA.
 
 ```{r}
 taxa <- addSpecies(taxa, "~/ARTICLE/silva_v138.2_assignSpecies.fa.gz?download=1")
 ```
 
-# Cette étape prépare la table taxonomique pour l’affichage en supprimant les séquences comme noms de lignes,
-# ce qui permet une lecture plus claire des niveaux taxonomiques attribués.
+Cette étape prépare la table taxonomique pour l’affichage en supprimant les séquences comme noms de lignes,
+ce qui permet une lecture plus claire des niveaux taxonomiques attribués.
 
 ```{r}
 taxa.print <- taxa # Removing sequence rownames for display only
 rownames(taxa.print) <- NULL
 head(taxa.print)
 ```
-#
+
 ```{r}
 library(DECIPHER); packageVersion("DECIPHER")
 ```
-## Cette partie utilise le package DECIPHER pour réaliser une classification taxonomique alternative,
-# reposant sur l’algorithme IdTaxa, souvent plus conservateur que celui de DADA2.
+
+Cette partie utilise le package DECIPHER pour réaliser une classification taxonomique alternative,
+reposant sur l’algorithme IdTaxa, souvent plus conservateur que celui de DADA2.
 
 ```{r}
 dna <- DNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
@@ -208,8 +211,8 @@ taxid <- t(sapply(ids, function(x) {
 colnames(taxid) <- ranks; rownames(taxid) <- getSequences(seqtab.nochim) 
 ```
 
-## Cette étape importe les métadonnées associées aux échantillons (origine, date, projet, etc.),
-# indispensables pour relier les profils microbiens aux variables biologiques ou environnementales.
+Cette étape importe les métadonnées associées aux échantillons (origine, date, projet, etc.),
+indispensables pour relier les profils microbiens aux variables biologiques ou environnementales.
 
 ```{r}
 metadata <- read.csv(
@@ -221,8 +224,8 @@ metadata <- read.csv(
 
 ```
 
-# Cette vérification garantit que l’ordre et l’identité des échantillons dans les métadonnées
-# correspondent exactement à ceux de la table ASV, condition essentielle pour une analyse correcte.
+Cette vérification garantit que l’ordre et l’identité des échantillons dans les métadonnées
+correspondent exactement à ceux de la table ASV, condition essentielle pour une analyse correcte.
 
 ```{r}
 metadata
@@ -258,8 +261,8 @@ metadata <- metadata[rownames(seqtab.nochim), , drop = FALSE]
 metadata
 ```
 
-#Cette étape construit l’objet phyloseq, qui regroupe dans une seule structure cohérente
-# la table d’abondance ASV, la taxonomie et les métadonnées, facilitant les analyses écologiques.
+Cette étape construit l’objet phyloseq, qui regroupe dans une seule structure cohérente
+ la table d’abondance ASV, la taxonomie et les métadonnées, facilitant les analyses écologiques.
 
 ```{r}
 library(phyloseq); packageVersion("phyloseq")
@@ -278,9 +281,8 @@ theme_set(theme_bw())
 ```
 
 
-
-## Cette étape construit l’objet phyloseq, qui regroupe dans une seule structure cohérente
-# la table d’abondance ASV, la taxonomie et les métadonnées, facilitant les analyses écologiques.
+Cette étape construit l’objet phyloseq, qui regroupe dans une seule structure cohérente
+ la table d’abondance ASV, la taxonomie et les métadonnées, facilitant les analyses écologiques.
 
 ```{r}
 library(phyloseq)
@@ -301,9 +303,8 @@ ps <- prune_samples(sample_names(ps) != "Mock", ps)
 
 ```
 
-
-# Cette étape ajoute les séquences ADN des ASV à l’objet phyloseq et renomme les ASV
-# pour améliorer la lisibilité des graphiques et des résultats.
+Cette étape ajoute les séquences ADN des ASV à l’objet phyloseq et renomme les ASV
+ pour améliorer la lisibilité des graphiques et des résultats.
 
 ```{r}
 dna <- Biostrings::DNAStringSet(taxa_names(ps))
@@ -313,8 +314,9 @@ taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
 ps
 
 ```
-# Cette analyse calcule et visualise la diversité alpha (richesse et indice de Shannon),
-# permettant de comparer la complexité des communautés microbiennes entre différents groupes.
+
+Cette analyse calcule et visualise la diversité alpha (richesse et indice de Shannon),
+permettant de comparer la complexité des communautés microbiennes entre différents groupes.
 
 ```{r}
 
@@ -333,26 +335,28 @@ plot_richness(
 
 ![Richness plot](assets/images/richness.png)
 
-#Cette vérification détecte la présence de valeurs manquantes dans la table d’abondance, qui pourraient provoquer des erreurs ou biaiser certaines analyses si elles ne sont pas traitées.
+Cette vérification détecte la présence de valeurs manquantes dans la table d’abondance, qui pourraient provoquer des erreurs ou biaiser certaines analyses si elles ne sont pas traitées.
+
 ```{r}
 any(is.na(otu_table(ps)))
 
 ```
-#On retire les échantillons sans lectures (0 reads), car ils ne contiennent aucune information microbiologique exploitable et peuvent faire échouer certaines fonctions d’ordination/diversité.
+
+On retire les échantillons sans lectures (0 reads), car ils ne contiennent aucune information microbiologique exploitable et peuvent faire échouer certaines fonctions d’ordination/diversité.
 
 ```{r}
 ps <- prune_samples(sample_sums(ps) > 0, ps)
 
 ```
 
-#On filtre ensuite les échantillons à faible profondeur (<1000 reads) afin de limiter les biais liés au sous-échantillonnage et rendre les comparaisons entre échantillons plus robustes.
+On filtre ensuite les échantillons à faible profondeur (<1000 reads) afin de limiter les biais liés au sous-échantillonnage et rendre les comparaisons entre échantillons plus robustes.
 
 ```{r}
 ps <- prune_samples(sample_sums(ps) >= 1000, ps)
 
 ```
 
-#On transforme les abondances en proportions (abondances relatives) pour comparer des profils indépendamment de la profondeur totale, ce qui est particulièrement adapté aux distances de type Bray-Curtis et aux visualisations de composition.*
+On transforme les abondances en proportions (abondances relatives) pour comparer des profils indépendamment de la profondeur totale, ce qui est particulièrement adapté aux distances de type Bray-Curtis et aux visualisations de composition.*
 
 ```{r}
 ps.prop <- transform_sample_counts(ps, function(x) x / sum(x))

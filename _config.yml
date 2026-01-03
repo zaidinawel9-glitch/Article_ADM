@@ -1,0 +1,13 @@
+theme: jekyll-theme-minimal
+title: Exploration et Réanalyse du Pipeline DADA2 pour la détection des Variants Amplicon (ASVs)
+description: Dans ce projet réalisé dans le cadre de mon cours d'Analyse de données Métrabarcoding, j’ai entièrement réanalysé des données réelles de séquençage 16S MiSeq du microbiote de souris en reproduisant et en approfondissant le tutoriel de l pipeline DADA2, avec l’objectif de devenir pleinement autonome en R pour l’analyse de données haut-débit. J’ai appliqué l’ensemble des étapes d’un workflow professionnel, contrôle qualité des séquences brutes, correction d’erreurs et inférence des ASVs, assignation taxonomique avec la base SILVA, puis exploration de la diversité microbienne et visualisation des résultats avec Phyloseq. Ce travail constitue mon premier projet complet en R et m’a permis de développer des compétences essentielles en microbiologie numérique, en interprétation des données et en traitement bioinformatique du microbiote, ouvrant la voie à mes futurs travaux de recherche dans le domaine de la santé microbienne. 
+
+# Markdown & code
+markdown: kramdown
+kramdown:
+  input: GFM
+highlighter: rouge
+
+# (optionnel) Réseaux sociaux affichés par le thème
+github:
+  is_project_page: false
