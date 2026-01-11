@@ -1,5 +1,5 @@
 theme: jekyll-theme-minimal
-title: Analyse des communautés microbiennes et des pathogènes hydriques dans l’eau potable domestique en Chine par métabarcoding 16S rRNA
+title: Mapping total microbial communities and waterborne pathogens in household drinking water in china by citizen science and metabarcoding
 description: Ce travail consiste en la reproduction de l’analyse bioinformatique des données de l’article “Mapping of total microbial communities and waterborne pathogens in household drinking water in China using citizen science and bar metabarcoding”. Les données de séquençage 16S rRNA ont été traitées à l’aide du pipeline DADA2 afin d’identifier les ASV, suivies d’une assignation taxonomique basée sur la base SILVA. Les résultats ont ensuite été intégrés dans phyloseq pour l’analyse de la diversité alpha et bêta (NMDS Bray–Curtis) ainsi que pour la visualisation de la composition microbienne. Cette approche permet de décrire la structure des communautés microbiennes de l’eau potable domestique et de mettre en évidence des taxons potentiellement associés à des pathogènes hydriques.
 
 # Markdown & code
