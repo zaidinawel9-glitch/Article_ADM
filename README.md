@@ -1,6 +1,19 @@
 R Notebook
 ================
 
+Introduction :
+
+L’eau potable est considérée comme sûre pour la consommation humaine, mais elle n’est pas totalement exempte de micro-organismes. Les réseaux de distribution d’eau peuvent héberger des communautés microbiennes complexes, incluant des bactéries environnementales et des pathogènes opportunistes. Les méthodes classiques basées sur la culture ne permettent pas de détecter l’ensemble de cette diversité. L’article étudié s’inscrit donc dans le contexte de la surveillance microbiologique de l’eau potable à l’aide du métabarcoding du gène 16S rRNA, combiné à une approche de science participative en Chine. L’objectif est de décrire la diversité microbienne totale et d’évaluer la présence de pathogènes d’origine hydrique dans l’eau domestique.
+#Problématique de l’article (INTRODUCTION)
+
+Question scientifique principale de l’article :
+
+Comment caractériser la composition globale des communautés microbiennes et la présence de pathogènes d’origine hydrique dans l’eau potable domestique en Chine, à grande échelle ?
+
+Matériels et Méthodes :
+
+Les échantillons d’eau ont été collectés par des volontaires dans différents foyers en chine , puis soumis à une extraction d’ADN suivie d’un séquençage Illumina paired-end ciblant le gène 16S rRNA. Les données de séquençage ont été traitées à l’aide du pipeline bioinformatique DADA2, qui permet un filtrage rigoureux des reads, l’apprentissage d’un modèle d’erreur, le débruitage des séquences et la génération de variantes de séquences exactes (ASV). Les reads forward et reverse ont ensuite été fusionnés, puis les séquences chimériques ont été éliminées. Une assignation taxonomique a été réalisée à l’aide de la base de données SILVA. Les analyses écologiques ont été conduites avec le package phyloseq afin d’évaluer la diversité alpha, la diversité beta et la composition taxonomique des communautés microbiennes.
+
 Cette première commande sert à charger le package DADA2 et vérifier sa version (utile pour la reproductibilité des résultats) — ici, c’est la version 1.28.0.
 
 ```{r}
@@ -26,6 +39,9 @@ fnRs <- sort(list.files(path, pattern="_2.fastq", full.names = TRUE))
 sample.names <- sapply(strsplit(basename(fnFs), "_1.fastq"), `[`, 1)
 sample.names <- sapply(strsplit(basename(fnRs), "_2.fastq"), `[`, 1)
 ```
+
+Qualité des données et traitement bioinformatique :
+Les profils de qualité des reads montrent une bonne qualité globale au début des séquences, suivie d’une diminution progressive des scores de qualité vers la fin, plus marquée pour les reads reverse. Ces observations justifient les paramètres de troncature choisis lors de l’étape de filtrage. Les graphiques du modèle d’erreur montrent une bonne concordance entre les erreurs observées et prédites, indiquant que le modèle appris par DADA2 est adapté aux données. Le suivi des reads à chaque étape du pipeline révèle une perte progressive mais attendue des séquences, avec une proportion finale satisfaisante de reads non chimériques.
 
 Commande pour tracer un graphique(un plot) qui montre la diminution des scores de qualité le long des séquences. afin de repérer où la qualité baisse et décider jusqu’où couper les bases peu fiables.
 
@@ -325,6 +341,11 @@ ps
 
 ```
 
+Diversité alpha :
+Quelle est la richesse et la diversité microbienne des échantillons d’eau potable ?
+
+L’analyse de la diversité alpha met en évidence une richesse élevée en ASV ainsi que des indices de Shannon relativement importants pour les échantillons analysés. Ces résultats indiquent que les communautés microbiennes présentes dans l’eau potable sont à la fois riches et diversifiées. Cette observation est cohérente avec les résultats de l’article, qui montrent que l’eau potable domestique héberge un microbiome complexe malgré les traitements appliqués. La diversité observée suggère une relative stabilité des communautés, tout en montrant une variabilité entre les échantillons.
+
 Cette analyse calcule et visualise la diversité alpha (richesse et indice de Shannon),
 permettant de comparer la complexité des communautés microbiennes entre différents groupes.
 
@@ -380,6 +401,10 @@ Cette section réalise une ordination NMDS basée sur Bray-Curtis afin de visual
 ps.prop <- transform_sample_counts(ps, function(otu) otu/sum(otu))
 ord.nmds.bray <- ordinate(ps.prop, method="NMDS", distance="bray")
 ```
+
+Diversité beta :
+
+L’ordination NMDS basée sur la distance de Bray-Curtis montre une dispersion des échantillons dans l’espace ordonné, traduisant une hétérogénéité de la composition microbienne entre les différents sites étudiés. L’absence de regroupement strict suggère que la structure des communautés varie en fonction de facteurs locaux, tels que la source de l’eau, les caractéristiques du réseau de distribution ou les conditions environnementales. Ces résultats confirment que les communautés microbiennes de l’eau potable ne sont pas homogènes à grande échelle.
 
 
 ```{r}
@@ -450,6 +475,11 @@ colnames(as.data.frame(sample_data(ps)))
 [33] "Sample.Name"                    "SRA.Study"                     
 [35] "Group"              
 
+Composition taxonomique :
+
+Quels sont les groupes bactériens dominants ?
+
+L’analyse de la composition taxonomique révèle une dominance des phyla Proteobacteria, Bacteroidota et Actinobacteriota, fréquemment retrouvés dans les environnements aquatiques et les réseaux d’eau potable. À des niveaux taxonomiques plus fins, plusieurs genres comprenant des bactéries pathogènes opportunistes, tels que Escherichia, Acinetobacter, Legionella et Mycobacterium, ont été détectés. Ces résultats sont cohérents avec ceux rapportés dans l’article et soulignent l’intérêt du métabarcoding pour la détection simultanée de bactéries environnementales et de pathogènes potentiels.
 
 Cette étape sélectionne les 20 ASV les plus abondants globalement, les convertit en abondances relatives et produit des barplots, ce qui permet de visualiser rapidement les taxa dominants et leur variation selon l’échantillon ou une variable expérimentale.
 
@@ -489,3 +519,119 @@ plot_bar(ps.top20, x = "BioSample", fill = "Species")
 ```
 
 ![Abundance by BioSample](assets/images/biosample1.png)
+
+
+```{r}
+Path <- "~/Analyse/phylum_ra_rt.csv"
+
+```
+
+
+```{r}
+a <- read.csv("~/Analyse/phylum_ra_rt.csv")
+
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer)
+
+b <- t(a)
+colnames(b) <- b[1,]
+d <- b[-1,]
+
+dt <- as.data.frame(d)
+dt[,1] <- as.numeric(dt[,1])
+od <- dt[order(dt[,1]),]
+
+od[,3:14] <- as.numeric(unlist(od[,3:14]))
+rownames(od) <- od[,2]
+gg <- od[,-1]
+
+gg$sa <- factor(gg$sa, levels = gg$sa)
+
+mt <- melt(data = gg, id.vars = "sa",
+           variable.name = "Phylum", value.name = "level")
+
+mt$RA <- 100 * as.numeric(mt$level)
+
+palette3 <- brewer.pal(1,"Set3")
+palette0 <- brewer.pal(11,"Paired")
+big_palette <- c(palette0, palette3)
+
+pth <- ggplot(mt, aes(x = sa, y = RA, fill = Phylum)) + 
+  geom_col(position = "stack", width = 0.6) +
+  theme_bw()
+
+pth
+
+```
+
+
+![Pathogènes](assets/images/000010.png)
+
+```{r}
+Path <- "~/Analyse/corpthasv2025.csv"
+
+```
+
+Corrélations entre diversité et pathogènes
+Existe-t-il un lien entre diversité microbienn
+e et abondance de pathogènes ?
+
+L’analyse de corrélation met en évidence des relations positives entre les indices de diversité microbienne et l’abondance de certains pathogènes. Cela suggère que les échantillons présentant une plus grande diversité bactérienne peuvent également contenir davantage de pathogènes opportunistes. Toutefois, ces résultats doivent être interprétés avec prudence, car la détection d’ADN ne permet pas de distinguer les bactéries vivantes des bactéries mortes ni d’évaluer leur potentiel infectieux réel.
+
+```{r}
+library(corrplot)
+
+p <- read.csv("~/Analyse/corpthasv2025.csv")
+
+# Colonnes numériques
+pnum <- p[, 2:12]
+
+# Corrélations
+p.cor <- cor(pnum, method = "spearman")
+
+# p-values : IMPORTANT -> il faut cor.mtest(pnum), pas cor.mtest(p.cor)
+test <- cor.mtest(pnum)
+
+# Ordre personnalisé
+custom_order <- c(
+  "Chao1", "Shannon", "Escherichia.coli", "Acinetobacter", "Salmonella",
+  "Legionella", "Leptospira", "Aeromonas", "Mycobacterium", "Brevundimonas", "Pathogen"
+)
+
+# Réordonner AVANT le plot
+p.cor <- p.cor[custom_order, custom_order]
+test$p <- test$p[custom_order, custom_order]
+
+# Ouvrir le PDF (dans le dossier courant)
+pdf("corasv_spear.pdf", width = 10, height = 10)
+
+corrplot.mixed(
+  p.cor,
+  lower = "number",
+  upper = "circle",
+  p.mat = test$p,
+  sig.level = c(0.001, 0.01, 0.05),
+  insig = "label_sig",      # met des symboles pour non significatif
+  pch.cex = 1,
+  pch.col = "grey20",
+  order = "original",
+  tl.pos = "lt",
+  tl.col = "black",
+  tl.cex = 1,
+  number.cex = 1,
+  upper.col = colorRampPalette(c("dodgerblue4", "white", "red3"))(200),
+  lower.col = colorRampPalette(c("dodgerblue4", "white", "red3"))(200)
+)
+
+dev.off()
+```
+
+
+![Conclusion](assets/images/conclusion.png)
+
+Discussion et conclusion :
+
+Dans l’ensemble, les résultats obtenus confirment les conclusions de l’article étudié, montrant que l’eau potable domestique abrite des communautés microbiennes diversifiées et parfois des pathogènes opportunistes. L’approche de métabarcoding utilisée constitue un outil puissant pour la surveillance microbiologique de l’eau, bien qu’elle présente certaines limites liées à l’absence d’information sur la viabilité bactérienne. Néanmoins, cette méthode offre une vision globale de la diversité microbienne et pourrait compléter les méthodes traditionnelles de contrôle sanitaire, notamment dans le cadre de programmes de surveillance à grande échelle.
+
